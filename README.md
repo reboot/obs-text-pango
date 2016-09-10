@@ -14,7 +14,7 @@ Current Features
   * Configurable width of the outline
   * Configurable color of the outline
 * Drop Shadow
-  * Configurable offset of the outline from the text
+  * Configurable offset of the drop shadow from the text
   * Configurable color for the drop shadow
 * Custom text width
   * Word wrapping
