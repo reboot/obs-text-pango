@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "text-pango.h"
+#include "utils.h"
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE("text-pango", "en-US")
@@ -312,6 +313,13 @@ static obs_properties_t *pango_source_get_properties(void *unused)
 
 	obs_properties_add_text(props, "text",
 		obs_module_text("Text"), OBS_TEXT_MULTILINE);
+	obs_properties_add_bool(props, "from_file",
+		obs_module_text("ReadFromFile"));
+	obs_properties_add_bool(props, "log_mode",
+		obs_module_text("ChatLogMode"));
+	obs_properties_add_path(props,
+		"text_file", obs_module_text("TextFile"),
+		OBS_PATH_FILE, obs_module_text("TextFileFilter"), NULL);
 
 	obs_properties_add_font(props, "font",
 		obs_module_text("Font"));
@@ -367,6 +375,8 @@ static void pango_source_destroy(void *data)
 
 	if (src->text != NULL)
 		bfree(src->text);
+	if (src->text_file != NULL)
+		bfree(src->text_file);
 
 	if (src->font_name != NULL)
 		bfree(src->font_name);
@@ -400,8 +410,24 @@ static void pango_source_render(void *data, gs_effect_t *effect)
 
 static void pango_video_tick(void *data, float seconds)
 {
-	UNUSED_PARAMETER(data);
 	UNUSED_PARAMETER(seconds);
+	struct pango_source *src = data;
+
+	if (src->from_file && src->text_file) {
+		if (os_gettime_ns() - src->file_last_checked >= 1000000000) {
+			time_t t = get_modified_timestamp(src->text_file);
+			src->file_last_checked = os_gettime_ns();
+
+			if (src->file_timestamp != t) {
+				if (src->log_mode)
+					read_from_end(src, src->text_file);
+				else
+					load_text_from_file(src,
+						src->text_file);
+				render_text(src);
+			}
+		}
+	}
 }
 
 static void pango_source_update(void *data, obs_data_t *settings)
@@ -412,6 +438,11 @@ static void pango_source_update(void *data, obs_data_t *settings)
 	if (src->text)
 		bfree(src->text);
 	src->text = bstrdup(obs_data_get_string(settings, "text"));
+	src->from_file = obs_data_get_bool(settings, "from_file");
+	src->log_mode = obs_data_get_bool(settings, "log_mode");
+	if (src->text_file)
+		bfree(src->text_file);
+	src->text_file = bstrdup(obs_data_get_string(settings, "text_file"));
 
 	font = obs_data_get_obj(settings, "font");
 	if (src->font_name)

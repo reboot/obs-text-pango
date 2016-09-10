@@ -36,7 +36,9 @@ include_directories(
 
 set(text-pango_SOURCES
 	text-pango.c
-	text-pango.h)
+	text-pango.h
+	utils.c
+	utils.h)
 
 add_library(text-pango MODULE
 	${text-pango_SOURCES})

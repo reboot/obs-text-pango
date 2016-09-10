@@ -11,6 +11,9 @@ enum {
 struct pango_source {
 	/* Config */
 	char *text;
+	bool from_file;
+	bool log_mode;
+	char *text_file;
 
 	char *font_name;
 	uint16_t font_size;
