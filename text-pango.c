@@ -139,6 +139,7 @@ void render_text(struct pango_source *src)
 	src->height += outline_width;
 	src->height += max(outline_width, drop_shadow_offset);
 	render_context = create_cairo_context(src, &surface, &surface_data);
+	cairo_set_operator(render_context, CAIRO_OPERATOR_SOURCE);
 
 	double xoffset;
 	if (src->custom_width && !src->word_wrap) {
