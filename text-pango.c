@@ -139,7 +139,6 @@ void render_text(struct pango_source *src)
 	src->height += outline_width;
 	src->height += max(outline_width, drop_shadow_offset);
 	render_context = create_cairo_context(src, &surface, &surface_data);
-	cairo_set_operator(render_context, CAIRO_OPERATOR_SOURCE);
 
 	double xoffset;
 	if (src->custom_width && !src->word_wrap) {
@@ -180,7 +179,10 @@ void render_text(struct pango_source *src)
 		int xpos = xoffset + rect.x / PANGO_SCALE;
 		int ypos = yoffset + baseline / PANGO_SCALE;
 
+		/* Draw the drop shadow */
 		if (drop_shadow_offset > 0) {
+			cairo_push_group(render_context);
+
 			cairo_move_to(render_context,
 					xpos + drop_shadow_offset,
 					ypos + drop_shadow_offset);
@@ -188,7 +190,14 @@ void render_text(struct pango_source *src)
 			cairo_set_source_rgba(render_context,
 					RGBA_CAIRO(src->drop_shadow_color));
 			cairo_fill(render_context);
+
+			cairo_pop_group_to_source(render_context);
+			cairo_paint(render_context);
 		}
+
+		/* Draw text with outline */
+		cairo_push_group(render_context);
+		cairo_set_operator(render_context, CAIRO_OPERATOR_SOURCE);
 
 		cairo_move_to(render_context, xpos, ypos);
 		pango_cairo_layout_line_path(render_context, line);
@@ -214,6 +223,9 @@ void render_text(struct pango_source *src)
 		cairo_fill(render_context);
 
 		cairo_pattern_destroy(pattern);
+
+		cairo_pop_group_to_source(render_context);
+		cairo_paint(render_context);
 	} while (pango_layout_iter_next_line(iter));
 	pango_layout_iter_free(iter);
 
