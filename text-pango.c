@@ -201,6 +201,7 @@ void render_text(struct pango_source *src)
 
 		cairo_move_to(render_context, xpos, ypos);
 		pango_cairo_layout_line_path(render_context, line);
+		cairo_set_line_join(render_context, CAIRO_LINE_JOIN_ROUND);
 
 		if (outline_width > 0) {
 			cairo_set_line_width(render_context, outline_width * 2);
